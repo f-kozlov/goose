@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/gojuno/goose/lib/goose"
+	"github.com/f-kozlov/goose/lib/goose"
 )
 
 var createDatabaseCmd = &Command{
@@ -60,6 +60,14 @@ func createDatabaseRun(cmd *Command, args ...string) {
 			ifNotExists = "IF NOT EXISTS"
 		}
 		if _, err := db.Exec(fmt.Sprintf("CREATE DATABASE %s %s CHARACTER SET utf8 COLLATE utf8_general_ci", ifNotExists, conf.DBName)); err != nil {
+			log.Fatal(err)
+		}
+	case "clickhouse":
+		ifNotExists := ""
+		if isSoft {
+			ifNotExists = "IF NOT EXISTS"
+		}
+		if _, err := db.Exec(fmt.Sprintf("CREATE DATABASE %s %s", ifNotExists, conf.DBName)); err != nil {
 			log.Fatal(err)
 		}
 	default:

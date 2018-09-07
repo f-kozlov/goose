@@ -19,6 +19,8 @@ func dialectByName(d string) SqlDialect {
 		return &PostgresDialect{}
 	case "mysql":
 		return &MySqlDialect{}
+	case "clickhouse":
+		return &ClickHouseDialect{}
 	}
 
 	return nil
@@ -87,5 +89,38 @@ func (m MySqlDialect) dbVersionQuery(db *sql.DB) (*sql.Rows, error) {
 		return nil, ErrTableDoesNotExist
 	}
 
+	return rows, err
+}
+
+////////////////////////////
+// ClickHouse
+////////////////////////////
+
+type ClickHouseDialect struct{}
+
+func (c ClickHouseDialect) createVersionTableSql() string {
+	return `
+		CREATE TABLE goose_db_version (
+			version_id Int64,
+			is_applied UInt8,
+			date       Date     default today(),
+			tstamp     DateTime default now()
+		) Engine = MergeTree(date, (date), 8192)
+	`
+}
+
+func (c ClickHouseDialect) insertVersionSql() string {
+	return "INSERT INTO goose_db_version (version_id, is_applied) VALUES (?, ?)"
+}
+
+func (c ClickHouseDialect) dbVersionQuery(db *sql.DB) (*sql.Rows, error) {
+	rows, err := db.Query("SELECT version_id, is_applied FROM goose_db_version ORDER BY version_id DESC, tstamp DESC")
+
+	// XXX: check for mysql specific error indicating the table doesn't exist.
+	// for now, assume any error is because the table doesn't exist,
+	// in which case we'll try to create it.
+	if err != nil {
+		return nil, ErrTableDoesNotExist
+	}
 	return rows, err
 }
