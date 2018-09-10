@@ -36,7 +36,7 @@ type DBConf struct {
 }
 
 // extract configuration details from the given file
-func NewDBConf(p, env string, pgschema string) (*DBConf, error) {
+func NewDBConf(p, env, pgschema, migrationsFolder string) (*DBConf, error) {
 
 	cfgFile := filepath.Join(p, "dbconf.yml")
 
@@ -115,7 +115,7 @@ func NewDBConf(p, env string, pgschema string) (*DBConf, error) {
 	}
 
 	return &DBConf{
-		MigrationsDir: filepath.Join(p, "migrations"),
+		MigrationsDir: filepath.Join(p, migrationsFolder),
 		Env:           env,
 		Driver:        d,
 		PgSchema:      pgschema,
